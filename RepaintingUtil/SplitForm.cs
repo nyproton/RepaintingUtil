@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Text;
 using System.Windows.Forms;
-using System.Configuration;
 
 
 namespace RepaintingUtil
 {
     public partial class SplitForm : Form
     {
-        public SplitForm(double energy)
+        public SplitForm(double energy, double enIncrement, double thresholdMU)
         {
             InitializeComponent();
             this.energy = energy;
-            numEnPlus.Value = Convert.ToDecimal(ConfigurationManager.AppSettings.Get("enIncrement"));
-            numEnMinus.Value = Convert.ToDecimal(ConfigurationManager.AppSettings.Get("enIncrement"));
-            numMU.Value = Convert.ToDecimal(ConfigurationManager.AppSettings.Get("thresholdMU"));
+            numEnPlus.Value = Convert.ToDecimal(enIncrement);
+            numEnMinus.Value = Convert.ToDecimal(enIncrement);
+            numMU.Value = Convert.ToDecimal(thresholdMU);
             updateNote();
 
         }
@@ -22,7 +21,7 @@ namespace RepaintingUtil
         double energy;
         public double energyUp { get; set; }
         public double energyDown { get; set; }
-        public double MUthreshold { get; set; }
+        public double thresholdMU { get; set; }
         public bool energyUpflag { get; set; }
         public bool energyDownflag { get; set; }
         public bool HUthresholdflag { get; set; }
@@ -53,10 +52,13 @@ namespace RepaintingUtil
 
         private void updateNote()
         {
-            energyUpflag = checkBox1.Checked;
-            energyDownflag = checkBox2.Checked;
-            HUthresholdflag = radioButton2.Checked;
-            
+            this.thresholdMU = Convert.ToDouble(numMU.Value);
+            this.energyUp = Convert.ToDouble(numEnPlus.Value);
+            this.energyUpflag = checkBox1.Checked;
+            this.energyDown = Convert.ToDouble(numEnMinus.Value);
+            this.energyDownflag = checkBox2.Checked;
+            this.HUthresholdflag = radioButton2.Checked;
+
             //StringBuilder sb = new StringBuilder();
             //sb.Append(String.Format("Split function is to split the current energy ({0}MeV) to {0}MeV, ", this.energy));
             //if (checkBox1.Checked)
@@ -99,6 +101,16 @@ namespace RepaintingUtil
         private void numEnMinus_ValueChanged(object sender, EventArgs e)
         {
             updateNote();
+        }
+
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            this.thresholdMU = Convert.ToDouble(numMU.Value);
+            this.energyUp = Convert.ToDouble(numEnPlus.Value);
+            this.energyUpflag = checkBox1.Checked;
+            this.energyDown = Convert.ToDouble(numEnMinus.Value);
+            this.energyDownflag = checkBox2.Checked;
+            this.HUthresholdflag = radioButton2.Checked;
         }
     }
 }

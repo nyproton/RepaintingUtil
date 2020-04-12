@@ -10,7 +10,10 @@ using System.IO;
 using EvilDICOM.Core.Interfaces;
 using EvilDICOM.Core.IO.Writing;
 using EvilDICOM.Core.IO.Reading;
-using System.Configuration;
+using IniParser;
+using IniParser.Model;
+using OxyPlot;
+using OxyPlot.Series;
 
 namespace RepaintingUtil
 {
@@ -19,11 +22,16 @@ namespace RepaintingUtil
         public Form1()
         {
             InitializeComponent();
+            var parser = new FileIniDataParser();
+            IniData data = parser.ReadFile("repainting.ini");
             this.painted = false;
             this.border = 10;
             this.spotdiameter = 10;
             this.planOpened = this.planModified = this.planSaved = false;
-            this.smallMUcap = Convert.ToDouble(ConfigurationManager.AppSettings.Get("smallMUcap"));
+            this.smallMUcap = double.Parse(data["Constrains"]["smallMUcap"]);
+            this.thresholdMU = double.Parse(data["Default"]["thresholdMU"]);
+            this.enIncrement = double.Parse(data["Default"]["enIncrement"]);
+            this.stepNumHistogram = int.Parse(data["Default"]["stepNumHistogram"]);
         }
 
         public DICOMObject plan { get; set; }
@@ -48,6 +56,9 @@ namespace RepaintingUtil
         public bool planModified { get; set; }
         public bool planSaved { get; set; }
         public double smallMUcap { get; set; }
+        public double enIncrement { get; set; }
+        public double thresholdMU { get; set; }
+        public int stepNumHistogram { get; set; }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -264,6 +275,26 @@ namespace RepaintingUtil
             pictureBox1.Image = null;
             pictureBox1.BackgroundImage = bmp;
             this.painted = true;
+
+            //histogram
+            var pm = new PlotModel { Title = "Spots MU Histogram" };
+            float mwMax = this.spotMaps[index].MeterWeights.Max();
+            float mwMin = this.spotMaps[index].MeterWeights.Min();
+            float step = (mwMax - mwMin) / this.stepNumHistogram;
+            var histo = new Dictionary<double, int>();
+            for(float curr = mwMin; curr <= mwMax; curr+=step)
+            {
+                var count = this.spotMaps[index].MeterWeights.Where(x => x >= curr && x < curr + step).Count();
+                histo.Add(curr * this.MUMWratio, count);
+            }
+            HistogramSeries histogram = new HistogramSeries();
+            foreach (var pair in histo.OrderBy(x=>x.Key))
+            {
+                histogram.Items.Add(new HistogramItem(pair.Key, pair.Key + step * this.MUMWratio, pair.Value, stepNumHistogram));
+            }
+            pm.Series.Add(histogram);
+            plotView1.Model = pm;
+            
         }
 
         private void btnFirst_Click(object sender, EventArgs e)
@@ -369,18 +400,28 @@ namespace RepaintingUtil
         private void splitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             double currentEnergy = this.spotMaps[currentLayerIndex].NominalEnergy;
-            SplitForm splitForm = new SplitForm(currentEnergy);
+            SplitForm splitForm = new SplitForm(currentEnergy, this.enIncrement, this.thresholdMU);
             splitForm.ShowDialog();
             if (splitForm.DialogResult == DialogResult.OK)
             {
+                
                 List<double> energies = new List<double>();
                 energies.Add(currentEnergy);
                 if (splitForm.energyUpflag)
+                {
                     energies.Add(splitForm.energyUp + currentEnergy);
+                    this.enIncrement = splitForm.energyUp;
+                }
                 if (splitForm.energyDownflag)
+                {
                     energies.Add(currentEnergy - splitForm.energyDown);
+                    this.enIncrement = splitForm.energyDown;
+                }
                 if (splitForm.HUthresholdflag)
-                    splitEnergy(energies, splitForm.MUthreshold);
+                {
+                    splitEnergy(energies, splitForm.thresholdMU);
+                    this.thresholdMU = splitForm.thresholdMU;
+                }
                 else
                     splitEnergy(energies, -1.0);
 
@@ -626,19 +667,5 @@ namespace RepaintingUtil
             return new DICOMObject(copy);
         }
 
-        private void preferenceToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ReferenceForm referenceForm = new ReferenceForm();
-            referenceForm.ShowDialog();
-            if (referenceForm.DialogResult == DialogResult.OK)
-            {
-                ConfigurationManager.AppSettings.Set("smallMUcap", referenceForm.smallMUcap.ToString());
-                ConfigurationManager.AppSettings.Set("enIncrement", referenceForm.enIncrement.ToString());
-                ConfigurationManager.AppSettings.Set("thresholdMU", referenceForm.thresholdMU.ToString());
-                referenceForm.Dispose();
-            }
-            else
-                referenceForm.Dispose();
-        }
     }
 }

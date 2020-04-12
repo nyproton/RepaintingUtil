@@ -38,6 +38,9 @@
     <Reference Include="EvilDICOM, Version=2.0.3.7, Culture=neutral, PublicKeyToken=236d7078f2290bcd, processorArchitecture=MSIL">
       <HintPath>..\packages\EvilDICOM.2.0.4\lib\net45\EvilDICOM.dll</HintPath>
     </Reference>
+    <Reference Include="INIFileParser, Version=2.5.2.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
+      <HintPath>..\packages\ini-parser.2.5.2\lib\net20\INIFileParser.dll</HintPath>
+    </Reference>
     <Reference Include="OxyPlot, Version=2.0.0.0, Culture=neutral, PublicKeyToken=638079a8f0bd61e9, processorArchitecture=MSIL">
       <HintPath>..\packages\OxyPlot.Core.2.0.0\lib\net45\OxyPlot.dll</HintPath>
     </Reference>
@@ -45,7 +48,6 @@
       <HintPath>..\packages\OxyPlot.WindowsForms.2.0.0\lib\net45\OxyPlot.WindowsForms.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
@@ -69,12 +71,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReferenceForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ReferenceForm.Designer.cs">
-      <DependentUpon>ReferenceForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="SplitForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -95,9 +91,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="ReferenceForm.resx">
-      <DependentUpon>ReferenceForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="SplitForm.resx">
       <DependentUpon>SplitForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -111,14 +104,15 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="repainting.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="NY-Proton-Stacked_s.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="NY-Proton-Stacked_s.jpg" />
     <Content Include="RepaintingUtil.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

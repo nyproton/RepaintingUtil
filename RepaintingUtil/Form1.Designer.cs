@@ -37,7 +37,6 @@
             this.exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.utilityToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.preferenceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
             this.txtSex = new System.Windows.Forms.TextBox();
@@ -73,7 +72,6 @@
             this.txtSnout = new System.Windows.Forms.TextBox();
             this.label13 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.txtSpotMU = new System.Windows.Forms.TextBox();
             this.label24 = new System.Windows.Forms.Label();
@@ -105,12 +103,12 @@
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.plotView1 = new OxyPlot.WindowsForms.PlotView();
             this.menuStrip1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.groupBox6.SuspendLayout();
             this.groupBox5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -125,7 +123,7 @@
             this.utilityToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(894, 28);
+            this.menuStrip1.Size = new System.Drawing.Size(1161, 28);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -171,8 +169,7 @@
             // utilityToolStripMenuItem
             // 
             this.utilityToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.splitToolStripMenuItem,
-            this.preferenceToolStripMenuItem});
+            this.splitToolStripMenuItem});
             this.utilityToolStripMenuItem.Name = "utilityToolStripMenuItem";
             this.utilityToolStripMenuItem.Size = new System.Drawing.Size(60, 24);
             this.utilityToolStripMenuItem.Text = "&Utility";
@@ -184,13 +181,6 @@
             this.splitToolStripMenuItem.Size = new System.Drawing.Size(216, 26);
             this.splitToolStripMenuItem.Text = "&Split...";
             this.splitToolStripMenuItem.Click += new System.EventHandler(this.splitToolStripMenuItem_Click);
-            // 
-            // preferenceToolStripMenuItem
-            // 
-            this.preferenceToolStripMenuItem.Name = "preferenceToolStripMenuItem";
-            this.preferenceToolStripMenuItem.Size = new System.Drawing.Size(216, 26);
-            this.preferenceToolStripMenuItem.Text = "&Preference...";
-            this.preferenceToolStripMenuItem.Click += new System.EventHandler(this.preferenceToolStripMenuItem_Click);
             // 
             // groupBox1
             // 
@@ -207,7 +197,7 @@
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBox1.Location = new System.Drawing.Point(0, 28);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(894, 58);
+            this.groupBox1.Size = new System.Drawing.Size(1161, 58);
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Patient Information";
@@ -359,7 +349,7 @@
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBox2.Location = new System.Drawing.Point(0, 86);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(894, 57);
+            this.groupBox2.Size = new System.Drawing.Size(1161, 57);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Plan Information";
@@ -453,7 +443,7 @@
             this.groupBox3.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBox3.Location = new System.Drawing.Point(0, 143);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(894, 103);
+            this.groupBox3.Size = new System.Drawing.Size(1161, 103);
             this.groupBox3.TabIndex = 3;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Field Information";
@@ -522,27 +512,17 @@
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.pictureBox2);
+            this.groupBox4.Controls.Add(this.plotView1);
             this.groupBox4.Controls.Add(this.groupBox6);
             this.groupBox4.Controls.Add(this.groupBox5);
             this.groupBox4.Controls.Add(this.pictureBox1);
             this.groupBox4.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBox4.Location = new System.Drawing.Point(0, 246);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(894, 626);
+            this.groupBox4.Size = new System.Drawing.Size(1161, 626);
             this.groupBox4.TabIndex = 4;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Spot map";
-            // 
-            // pictureBox2
-            // 
-            this.pictureBox2.Image = global::RepaintingUtil.Properties.Resources.NY_Proton_Stacked_s;
-            this.pictureBox2.InitialImage = null;
-            this.pictureBox2.Location = new System.Drawing.Point(613, 541);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(270, 80);
-            this.pictureBox2.TabIndex = 3;
-            this.pictureBox2.TabStop = false;
             // 
             // groupBox6
             // 
@@ -554,7 +534,7 @@
             this.groupBox6.Controls.Add(this.label22);
             this.groupBox6.Controls.Add(this.txtSpotX);
             this.groupBox6.Controls.Add(this.label23);
-            this.groupBox6.Location = new System.Drawing.Point(613, 324);
+            this.groupBox6.Location = new System.Drawing.Point(888, 22);
             this.groupBox6.Name = "groupBox6";
             this.groupBox6.Size = new System.Drawing.Size(266, 154);
             this.groupBox6.TabIndex = 2;
@@ -837,7 +817,7 @@
             this.toolStripStatusLabel1});
             this.statusStrip1.Location = new System.Drawing.Point(0, 873);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(894, 25);
+            this.statusStrip1.Size = new System.Drawing.Size(1161, 25);
             this.statusStrip1.TabIndex = 5;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -847,11 +827,23 @@
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(56, 20);
             this.toolStripStatusLabel1.Text = "No File";
             // 
+            // plotView1
+            // 
+            this.plotView1.Location = new System.Drawing.Point(613, 324);
+            this.plotView1.Name = "plotView1";
+            this.plotView1.PanCursor = System.Windows.Forms.Cursors.Hand;
+            this.plotView1.Size = new System.Drawing.Size(541, 296);
+            this.plotView1.TabIndex = 4;
+            this.plotView1.Text = "pvHistogram";
+            this.plotView1.ZoomHorizontalCursor = System.Windows.Forms.Cursors.SizeWE;
+            this.plotView1.ZoomRectangleCursor = System.Windows.Forms.Cursors.SizeNWSE;
+            this.plotView1.ZoomVerticalCursor = System.Windows.Forms.Cursors.SizeNS;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(894, 898);
+            this.ClientSize = new System.Drawing.Size(1161, 898);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
@@ -871,7 +863,6 @@
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.groupBox4.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
             this.groupBox5.ResumeLayout(false);
@@ -951,7 +942,6 @@
         private System.Windows.Forms.Label label23;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.TextBox txtSpotMU;
         private System.Windows.Forms.Label label24;
         private System.Windows.Forms.TextBox txtLayerMaxMU;
@@ -961,7 +951,7 @@
         private System.Windows.Forms.Label label25;
         private System.Windows.Forms.TextBox txtLayerMinMW;
         private System.Windows.Forms.Label label26;
-        private System.Windows.Forms.ToolStripMenuItem preferenceToolStripMenuItem;
+        private OxyPlot.WindowsForms.PlotView plotView1;
     }
 }
 
