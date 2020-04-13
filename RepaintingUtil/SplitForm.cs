@@ -1,86 +1,93 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-
+using OxyPlot;
+using OxyPlot.Series;
+using OxyPlot.WindowsForms;
 
 namespace RepaintingUtil
 {
     public partial class SplitForm : Form
     {
-        public SplitForm(double energy, double enIncrement, double thresholdMU)
+        public SplitForm(double enIncrement, double thresholdMU, List<SpotMap> spotMaps, double MUMWratio, double smallMUcap)
         {
             InitializeComponent();
-            this.energy = energy;
+            this.spotMaps = spotMaps;
+            this.MUMWratio = MUMWratio;
+            this.smallMUcap = smallMUcap;
             numEnPlus.Value = Convert.ToDecimal(enIncrement);
             numEnMinus.Value = Convert.ToDecimal(enIncrement);
             numMU.Value = Convert.ToDecimal(thresholdMU);
-            updateNote();
+            initText = initNote();
+            txtStatistic.Text = initText;
 
         }
 
-        double energy;
+        private string initNote()
+        {
+            int totalSpots = spotMaps.Sum(s => s.ScanSpotNumber);
+            double maxMU = spotMaps.Max(s => s.MeterWeights.Max()) * this.MUMWratio;
+            double maxEn = spotMaps.Max(s => s.NominalEnergy);
+            double minEn = spotMaps.Min(s => s.NominalEnergy);
+            return string.Format("Total {0} layers from {1:0.000} MeV to {2:0.000} MeV. Total {3} spots. Max MU is {4:0.000}.", spotMaps.Count, minEn, maxEn, totalSpots, maxMU);
+        }
+
+
         public double energyUp { get; set; }
         public double energyDown { get; set; }
         public double thresholdMU { get; set; }
+        public double layerThreshold { get; set; }
+        public double layerPercent { get; set; }
         public bool energyUpflag { get; set; }
         public bool energyDownflag { get; set; }
         public bool HUthresholdflag { get; set; }
+        public bool layerThresholdflag { get; set; }
+        public bool layerPercentflag { get; set; }
+        public List<SpotMap> spotMaps { get; set; }
+        public double MUMWratio { get; set; }
+        public double smallMUcap { get; set; }
+        public string initText { get; set; }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
-            numEnPlus.Enabled = checkBox1.Checked;
+            numEnPlus.Enabled = cbEnUp.Checked;
             updateNote();
         }
 
         private void checkBox2_CheckedChanged(object sender, EventArgs e)
         {
-            numEnMinus.Enabled = checkBox2.Checked;
+            numEnMinus.Enabled = cbEnDown.Checked;
             updateNote();
         }
 
         private void radioButton2_CheckedChanged(object sender, EventArgs e)
         {
-            numMU.Enabled = radioButton2.Checked;
+            numMU.Enabled = rbSpotsThreshold.Checked;
             updateNote();
         }
 
         private void radioButton1_CheckedChanged(object sender, EventArgs e)
         {
-            numMU.Enabled = radioButton2.Checked;
+            numMU.Enabled = rbSpotsThreshold.Checked;
             updateNote();
         }
 
         private void updateNote()
         {
             this.thresholdMU = Convert.ToDouble(numMU.Value);
+            this.HUthresholdflag = rbSpotsThreshold.Checked;
             this.energyUp = Convert.ToDouble(numEnPlus.Value);
-            this.energyUpflag = checkBox1.Checked;
+            this.energyUpflag = cbEnUp.Checked;
             this.energyDown = Convert.ToDouble(numEnMinus.Value);
-            this.energyDownflag = checkBox2.Checked;
-            this.HUthresholdflag = radioButton2.Checked;
-
-            //StringBuilder sb = new StringBuilder();
-            //sb.Append(String.Format("Split function is to split the current energy ({0}MeV) to {0}MeV, ", this.energy));
-            //if (checkBox1.Checked)
-            //{
-            //    energyUp = (double)numEnPlus.Value;
-            //    sb.Append(String.Format("{0}MeV, ", energy + energyUp));
-            //}
-            //if (checkBox2.Checked)
-            //{
-            //    energyDown = (double)numEnMinus.Value;
-            //    sb.Append(String.Format("{0}MeV, ", energy + energyDown));
-            //}
-            //if (radioButton1.Checked)
-            //{
-            //    sb.Append("all spots will be split.");
-            //}
-            //if (radioButton2.Checked)
-            //{
-            //    MUthreshold = Convert.ToDouble(numMU.Text);
-            //    sb.Append(String.Format("only spots with MU big than {0} will be split.", MUthreshold));
-            //}
-            //txtNote.Text = sb.ToString();
+            this.energyDownflag = cbEnDown.Checked;
+            this.layerPercent = Convert.ToDouble(numLayerPercent.Value);
+            this.layerPercentflag = rbLayersPercent.Checked;
+            this.layerThreshold = Convert.ToDouble(numLayerThreshold.Value);
+            this.layerThresholdflag = rbLayersThreshold.Checked;
+            if (!this.HUthresholdflag)
+                this.thresholdMU = -1.0;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -105,12 +112,53 @@ namespace RepaintingUtil
 
         private void btnOK_Click(object sender, EventArgs e)
         {
-            this.thresholdMU = Convert.ToDouble(numMU.Value);
-            this.energyUp = Convert.ToDouble(numEnPlus.Value);
-            this.energyUpflag = checkBox1.Checked;
-            this.energyDown = Convert.ToDouble(numEnMinus.Value);
-            this.energyDownflag = checkBox2.Checked;
-            this.HUthresholdflag = radioButton2.Checked;
+            updateNote();
+        }
+
+        private void rbLayersAll_CheckedChanged(object sender, EventArgs e)
+        {
+            numLayerPercent.Enabled = rbLayersPercent.Checked;
+            numLayerThreshold.Enabled = rbLayersThreshold.Checked;
+            updateNote();
+        }
+
+        private void btnPreview_Click(object sender, EventArgs e)
+        {
+            updateNote();
+            //get layers
+            List<double> layers = new List<double>();
+            if (layerPercentflag)
+            {
+                int num = (int)(layerPercent * spotMaps.Count / 100);
+                layers = spotMaps.OrderByDescending(s => s.NominalEnergy).Select(s => s.NominalEnergy).Take(num).ToList();
+            }
+            else if (layerThresholdflag)
+                layers = spotMaps.Where(s => s.NominalEnergy > layerThreshold).Select(s => s.NominalEnergy).ToList();
+            else
+                layers = spotMaps.Select(s => s.NominalEnergy).ToList();
+
+            List<SpotMap> ssm = Utility.splitSpotMaps(spotMaps, thresholdMU, MUMWratio, layers, energyUp, smallMUcap, energyUpflag, energyDownflag);
+            int totalSpots = ssm.Sum(s => s.ScanSpotNumber);
+            double maxMU = ssm.Max(s => s.MeterWeights.Max()) * this.MUMWratio;
+
+            txtStatistic.Text = initText + string.Format(" After split total {0} layers, Total {1} spot and Max MU is {2:0.000}", ssm.Count, totalSpots, maxMU);
+
+            panel3.Controls.Clear();
+            int ht = 0;
+            foreach(SpotMap sm in ssm)
+            {
+                var pm = new PlotModel { Title = string.Format("{0:0.000}MeV", sm.NominalEnergy), TitleFontSize = 10 };
+                var s = new ScatterSeries { MarkerType = MarkerType.Circle, MarkerSize = 1, MarkerStrokeThickness = 0, MarkerFill = OxyColors.Black };
+                for(int i=0;i<sm.ScanSpotNumber;i++)
+                    s.Points.Add(new ScatterPoint(sm.X[i], sm.Y[i]));
+                pm.Series.Add(s);
+                var pv = new PlotView();
+                pv.Model = pm;
+                pv.Location = new System.Drawing.Point(0, ht);
+                pv.Size = new System.Drawing.Size(80, 120);
+                ht += pv.Size.Height;
+                panel3.Controls.Add(pv);
+            }
         }
     }
 }

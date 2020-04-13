@@ -78,6 +78,7 @@
       <DependentUpon>SplitForm.cs</DependentUpon>
     </Compile>
     <Compile Include="SpotMap.cs" />
+    <Compile Include="Utility.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

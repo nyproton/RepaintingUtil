@@ -282,19 +282,27 @@ namespace RepaintingUtil
             float mwMin = this.spotMaps[index].MeterWeights.Min();
             float step = (mwMax - mwMin) / this.stepNumHistogram;
             var histo = new Dictionary<double, int>();
-            for(float curr = mwMin; curr <= mwMax; curr+=step)
-            {
-                var count = this.spotMaps[index].MeterWeights.Where(x => x >= curr && x < curr + step).Count();
-                histo.Add(curr * this.MUMWratio, count);
-            }
             HistogramSeries histogram = new HistogramSeries();
-            foreach (var pair in histo.OrderBy(x=>x.Key))
+            if (step > 0)
             {
-                histogram.Items.Add(new HistogramItem(pair.Key, pair.Key + step * this.MUMWratio, pair.Value, stepNumHistogram));
+                for (float curr = mwMin; curr <= mwMax; curr += step)
+                {
+                    var count = this.spotMaps[index].MeterWeights.Where(x => x >= curr && x < curr + step).Count();
+                    histo.Add(curr * this.MUMWratio, count);
+                }
+
+                foreach (var pair in histo.OrderBy(x => x.Key))
+                {
+                    histogram.Items.Add(new HistogramItem(pair.Key, pair.Key + step * this.MUMWratio, pair.Value * step * this.MUMWratio, stepNumHistogram));
+                }
             }
+            else
+                histogram.Items.Add(new HistogramItem(mwMin, mwMin + 5, 5, 1));
+
+            histogram.TrackerFormatString = "MU Spots Count:\nFrom{5:#.00} to {6:#.00}\nMU counts: {7}";
             pm.Series.Add(histogram);
             plotView1.Model = pm;
-            
+
         }
 
         private void btnFirst_Click(object sender, EventArgs e)
@@ -400,35 +408,33 @@ namespace RepaintingUtil
         private void splitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             double currentEnergy = this.spotMaps[currentLayerIndex].NominalEnergy;
-            SplitForm splitForm = new SplitForm(currentEnergy, this.enIncrement, this.thresholdMU);
+            SplitForm splitForm = new SplitForm(this.enIncrement, this.thresholdMU, this.spotMaps, this.MUMWratio, this.smallMUcap);
             splitForm.ShowDialog();
             if (splitForm.DialogResult == DialogResult.OK)
             {
-                
-                List<double> energies = new List<double>();
-                energies.Add(currentEnergy);
-                if (splitForm.energyUpflag)
+                //get layers
+                List<double> layers = new List<double>();
+                if (splitForm.layerPercentflag)
                 {
-                    energies.Add(splitForm.energyUp + currentEnergy);
-                    this.enIncrement = splitForm.energyUp;
+                    int num = (int)(splitForm.layerPercent * this.spotMaps.Count / 100);
+                    layers = this.spotMaps.OrderByDescending(s => s.NominalEnergy).Select(s => s.NominalEnergy).Take(num).ToList(); //first x% layers
                 }
-                if (splitForm.energyDownflag)
-                {
-                    energies.Add(currentEnergy - splitForm.energyDown);
-                    this.enIncrement = splitForm.energyDown;
-                }
-                if (splitForm.HUthresholdflag)
-                {
-                    splitEnergy(energies, splitForm.thresholdMU);
-                    this.thresholdMU = splitForm.thresholdMU;
-                }
+                else if (splitForm.layerThresholdflag)
+                    layers = this.spotMaps.Where(s => s.NominalEnergy > splitForm.layerThreshold).Select(s => s.NominalEnergy).ToList(); //higher than x MeV
                 else
-                    splitEnergy(energies, -1.0);
+                    layers = this.spotMaps.Select(s => s.NominalEnergy).ToList(); //all energy
+
+                this.spotMaps = Utility.splitSpotMaps(this.spotMaps, splitForm.thresholdMU, this.MUMWratio, layers, splitForm.energyUp, this.smallMUcap, splitForm.energyUpflag, splitForm.energyDownflag);
 
                 splitForm.Dispose();
             }
             else
                 splitForm.Dispose();
+
+            UpdateICS();
+            adjustMU();
+            loadField();
+            planModified = true;
         }
 
         private void splitEnergy(List<double> energies, double HUThreshold)
@@ -490,10 +496,7 @@ namespace RepaintingUtil
                 spotMaps[i].LayerIndex = i;
             }
 
-            UpdateICS();
-            adjustMU();
-            loadField();
-            planModified = true;
+            
         }
 
         void UpdateICS()

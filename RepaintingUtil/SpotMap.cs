@@ -46,7 +46,74 @@ namespace RepaintingUtil
             List<float> scanspotsize = (List<float>)icpStart.FindFirst(TagHelper.ScanningSpotSize).DData_;
             this.SpotSizeX = scanspotsize[0];
             this.SpotSizeY = scanspotsize[1];
-            
+        }
+
+        public SpotMap Copy()
+        {
+            SpotMap destsm = new SpotMap();
+            destsm.X = (float[])this.X.Clone();
+            destsm.Y = (float[])this.Y.Clone();
+            destsm.MeterWeights = (float[])this.MeterWeights.Clone();
+            destsm.LayerIndex = this.LayerIndex;
+            destsm.NominalEnergy = this.NominalEnergy;
+            destsm.ScanSpotNumber = this.ScanSpotNumber;
+            destsm.CumMeterWeight = this.CumMeterWeight;
+            destsm.SpotSizeX = this.SpotSizeX;
+            destsm.SpotSizeY = this.SpotSizeY;
+
+            return destsm;
+        }
+
+        // Split one energy layer to couple energies, usually +/- 0.1 MeV, for all spot > threshold MU, make sure the final one not smaller than smallHUcap
+        // Have to set layerIndex and cummeterweight after that
+        public List<SpotMap> SplitTo(List<double> energies, double thresholdMU, double smallHUcap, double MUMWratio)
+        {
+            List<SpotMap> split = new List<SpotMap>();
+            energies.Sort();
+            energies.Reverse();
+            for(int i = 0; i < energies.Count; i++)
+            {
+                SpotMap sm = this.Copy();
+                sm.NominalEnergy = energies[i];
+                List<float> x = new List<float>();
+                List<float> y = new List<float>();
+                List<float> mw = new List<float>();
+                for (int j = 0; j < this.ScanSpotNumber; j++)
+                {
+                    if (sm.NominalEnergy != this.NominalEnergy) //not original layer
+                    {
+                        if ((this.MeterWeights[j] * MUMWratio > thresholdMU) && (this.MeterWeights[j] * MUMWratio > smallHUcap * energies.Count))
+                        {
+                            x.Add(this.X[j]);
+                            y.Add(this.Y[j]);
+                            mw.Add(this.MeterWeights[j] / energies.Count);
+                        }
+                    }
+                    else
+                    {
+                        if ((this.MeterWeights[j] * MUMWratio > thresholdMU) && (this.MeterWeights[j] * MUMWratio > smallHUcap * energies.Count)) //original layer
+                        {
+                            x.Add(this.X[j]);
+                            y.Add(this.Y[j]);
+                            mw.Add(this.MeterWeights[j] / energies.Count);
+                        }
+                        else
+                        {
+                            x.Add(this.X[j]);
+                            y.Add(this.Y[j]);
+                            mw.Add(this.MeterWeights[j]);
+                        }
+                    }
+                }
+                sm.ScanSpotNumber = x.Count;
+                sm.X = x.ToArray();
+                sm.Y = y.ToArray();
+                sm.MeterWeights = mw.ToArray();
+                sm.CumMeterWeight = mw.Sum();
+                if (sm.ScanSpotNumber > 0)
+                    split.Add(sm);
+            }
+            return split;
         }
 
     }
