@@ -11,7 +11,6 @@ namespace RepaintingUtil
         public static List<SpotMap> splitSpotMaps(List<SpotMap> spotMaps, double thresholdMU, double MUMWratio, List<double> layers, double enIncrement, double smallHUcap, bool enPlus = true, bool enMinus = true)
         {
             List<SpotMap> splitSpots = new List<SpotMap>();
-            int idx = 0;
             foreach (SpotMap s in spotMaps)
                 if (layers.Contains(s.NominalEnergy))
                 {

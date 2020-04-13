@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using OxyPlot;
 using OxyPlot.Series;
 using OxyPlot.WindowsForms;
+using OxyPlot.Axes;
 
 namespace RepaintingUtil
 {
@@ -22,7 +23,6 @@ namespace RepaintingUtil
             numMU.Value = Convert.ToDecimal(thresholdMU);
             initText = initNote();
             txtStatistic.Text = initText;
-
         }
 
         private string initNote()
@@ -141,21 +141,32 @@ namespace RepaintingUtil
             int totalSpots = ssm.Sum(s => s.ScanSpotNumber);
             double maxMU = ssm.Max(s => s.MeterWeights.Max()) * this.MUMWratio;
 
-            txtStatistic.Text = initText + string.Format(" After split total {0} layers, Total {1} spot and Max MU is {2:0.000}", ssm.Count, totalSpots, maxMU);
+            txtStatistic.Text = initText + string.Format(" After split total {0} layers, Total {1} spot and Max MU is {2:0.000}.", ssm.Count, totalSpots, maxMU);
+            txtStatistic.Text += ("\nUse PgUP PgDn to ZOOM, use right mouse click and drag to PAN.");
 
             panel3.Controls.Clear();
             int ht = 0;
-            foreach(SpotMap sm in ssm)
+            foreach (SpotMap sm in ssm)
             {
                 var pm = new PlotModel { Title = string.Format("{0:0.000}MeV", sm.NominalEnergy), TitleFontSize = 10 };
-                var s = new ScatterSeries { MarkerType = MarkerType.Circle, MarkerSize = 1, MarkerStrokeThickness = 0, MarkerFill = OxyColors.Black };
-                for(int i=0;i<sm.ScanSpotNumber;i++)
-                    s.Points.Add(new ScatterPoint(sm.X[i], sm.Y[i]));
+                var coloraxis = new LinearColorAxis
+                {
+                    Key = "ColorAxis",
+                    Position = AxisPosition.None,
+                    Minimum = ssm.Min(ss => ss.MeterWeights.Min()),
+                    Maximum = ssm.Max(ss => ss.MeterWeights.Max())
+                };
+                pm.Axes.Add(coloraxis);
+                var s = new ScatterSeries { MarkerType = MarkerType.Circle, MarkerSize = 2, MarkerStrokeThickness = 0, ColorAxisKey = "ColorAxis", TrackerFormatString = "\nX: {2:0.###}\nY: {4:0.###}\nMU: {Tag}" };
+                for (int i = 0; i < sm.ScanSpotNumber; i++)
+                    s.Points.Add(new ScatterPoint(sm.X[i], sm.Y[i], double.NaN, sm.MeterWeights[i] * this.MUMWratio, (sm.MeterWeights[i] * this.MUMWratio).ToString("0.###")));
                 pm.Series.Add(s);
                 var pv = new PlotView();
                 pv.Model = pm;
+                pm.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Minimum = -200, Maximum = 200 });
+                pm.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = -200, Maximum = 200 });
                 pv.Location = new System.Drawing.Point(0, ht);
-                pv.Size = new System.Drawing.Size(80, 120);
+                pv.Size = new System.Drawing.Size(360, 400);
                 ht += pv.Size.Height;
                 panel3.Controls.Add(pv);
             }

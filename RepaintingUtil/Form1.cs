@@ -14,6 +14,7 @@ using IniParser;
 using IniParser.Model;
 using OxyPlot;
 using OxyPlot.Series;
+using OxyPlot.Axes;
 
 namespace RepaintingUtil
 {
@@ -151,8 +152,8 @@ namespace RepaintingUtil
                     foreach (Control cc in c.Controls)
                         if (cc.GetType() == typeof(TextBox))
                             cc.Text = "";
-            pictureBox1.BackgroundImage = null;
-            pictureBox1.Image = null;
+            plotView1.Model = null;
+            plotViewHistogram.Model = null;
             toolStripStatusLabel1.Text = "No File";
             this.Text = "Repainting Utility - No File";
     }
@@ -258,22 +259,20 @@ namespace RepaintingUtil
             txtLayerMinMW.Text = this.spotMaps[index].MeterWeights.Min().ToString();
             txtLayerMinMU.Text = (this.spotMaps[index].MeterWeights.Min() * this.MUMWratio).ToString();
 
-            Bitmap bmp = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-            float xres = (bmp.Width - (this.border * 2)) / Math.Max(Math.Abs(XMax), Math.Abs(XMin)) / 2;
-            float yres = (bmp.Height - (this.border * 2)) / Math.Max(Math.Abs(YMax), Math.Abs(YMin)) / 2;
-            this.res = Math.Min(xres, yres);
-            using (Graphics g = Graphics.FromImage(bmp))
-            {
-                for (int i = 0; i < this.spotMaps[index].ScanSpotNumber; i++)
-                {
-                    float x = spotMaps[index].X[i] * this.res + pictureBox1.Width / 2 + border;
-                    float y = pictureBox1.Height / 2 - spotMaps[index].Y[i] * this.res + border;
-                    float MUfrac = (spotMaps[index].MeterWeights[i] - MeterWeightMin) / (MeterWeightMax - MeterWeightMin);
-                    g.FillEllipse(new SolidBrush(rainbowColor(MUfrac)), x - this.spotdiameter / 2, y - this.spotdiameter / 2, this.spotdiameter, this.spotdiameter);
-                }
-            }
-            pictureBox1.Image = null;
-            pictureBox1.BackgroundImage = bmp;
+
+
+            //spotmap
+            var pmSM = new PlotModel { Title = string.Format("{0:0.000}MeV", spotMaps[index].NominalEnergy) };
+            var coloraxis = new LinearColorAxis { Key = "ColorAxis", Position = AxisPosition.None, Minimum = spotMaps.Min(sm => sm.MeterWeights.Min()), Maximum = spotMaps.Max(sm => sm.MeterWeights.Max()) };
+            pmSM.Axes.Add(coloraxis);
+            var s = new ScatterSeries { MarkerType = MarkerType.Circle, MarkerSize = 4, MarkerStrokeThickness = 0, ColorAxisKey = "ColorAxis", TrackerFormatString = "\nX: {2:0.###}\nY: {4:0.###}\nMU: {Tag}" };
+            for (int i = 0; i < spotMaps[index].ScanSpotNumber; i++)
+                s.Points.Add(new ScatterPoint(spotMaps[index].X[i], spotMaps[index].Y[i], double.NaN, spotMaps[index].MeterWeights[i] * this.MUMWratio, (spotMaps[index].MeterWeights[i] * this.MUMWratio).ToString("0.###")));
+            pmSM.Series.Add(s);
+            pmSM.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Minimum = -200, Maximum = 200 });
+            pmSM.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = -200, Maximum = 200 });
+            plotView1.Model = pmSM;
+
             this.painted = true;
 
             //histogram
@@ -301,7 +300,7 @@ namespace RepaintingUtil
 
             histogram.TrackerFormatString = "MU Spots Count:\nFrom{5:#.00} to {6:#.00}\nMU counts: {7}";
             pm.Series.Add(histogram);
-            plotView1.Model = pm;
+            plotViewHistogram.Model = pm;
 
         }
 
@@ -331,78 +330,6 @@ namespace RepaintingUtil
         {
             this.currentLayerIndex = this.spotMaps.Count - 1;
             updateLayer(this.currentLayerIndex);
-        }
-
-        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (painted)
-            {
-                if (e.X > this.border && e.X < pictureBox1.Width - this.border
-                    && e.Y > this.border && e.Y < pictureBox1.Height - this.border)
-                {
-                    float spotx = (e.X - border - pictureBox1.Width / 2) / this.res;
-                    float spoty = (pictureBox1.Height / 2 + border - e.Y) / this.res;
-                    toolStripStatusLabel1.Text = String.Format("X: {0:0.000}   Y: {1:0.000}  px:{2}   py:{3} ", spotx, spoty, e.X, e.Y);
-                }
-            }
-        }
-
-        private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (painted)
-            {
-                if (e.X > this.border && e.X < pictureBox1.Width - this.border
-                    && e.Y > this.border && e.Y < pictureBox1.Height - this.border)
-                {
-                    float spotx = (e.X - border - pictureBox1.Width / 2) / this.res;
-                    float spoty = (pictureBox1.Height / 2 + border - e.Y) / this.res;
-                    float distMin = 1000;
-                    int n = -1;
-                    for (int i = 0; i < spotMaps[currentLayerIndex].ScanSpotNumber; i++)
-                    {
-                        float distance = (spotx - spotMaps[currentLayerIndex].X[i]) * (spotx - spotMaps[currentLayerIndex].X[i])
-                            + (spoty - spotMaps[currentLayerIndex].Y[i]) * (spoty - spotMaps[currentLayerIndex].Y[i]);
-                        if (distance < distMin)
-                        {
-                            distMin = distance;
-                            n = i;
-                        }
-                    }
-                    if (distMin < 10)
-                    {
-                        txtSpotX.Text = spotMaps[currentLayerIndex].X[n].ToString("0.000");
-                        txtSpotY.Text = spotMaps[currentLayerIndex].Y[n].ToString("0.000");
-                        txtSpotMW.Text = spotMaps[currentLayerIndex].MeterWeights[n].ToString("0.00000");
-                        txtSpotMU.Text = (spotMaps[currentLayerIndex].MeterWeights[n] * this.MUMWratio).ToString("0.00000");
-
-                        Bitmap bmp = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-                        using (Graphics g = Graphics.FromImage(bmp))
-                        {
-                            float x = spotMaps[currentLayerIndex].X[n] * this.res + pictureBox1.Width / 2 + border;
-                            float y = pictureBox1.Height / 2 - spotMaps[currentLayerIndex].Y[n] * this.res + border;
-                            g.DrawEllipse(new Pen(Color.Yellow), x - this.spotdiameter / 2, y - this.spotdiameter / 2, this.spotdiameter, this.spotdiameter);
-                        }
-                        pictureBox1.Image = bmp;
-                    }
-                }
-            }
-        }
-
-        private Color rainbowColor(float frac) //frac = (s-smin)/(smax-smin)
-        {
-            int r = 0, g = 0, b = 0;
-            double a = (1 - frac) / 0.25;
-            double X = Math.Floor(a);
-            int Y = (int)Math.Floor(255 * (a - X));
-            switch (X)
-            {
-                case 0: r = 255; g = Y; b = 0; break;
-                case 1: r = 255 - Y; g = 255; b = 0; break;
-                case 2: r = 0; g = 255; b = Y; break;
-                case 3: r = 0; g = 255 - Y; b = 255; break;
-                case 4: r = 0; g = 0; b = 255; break;
-            }
-            return Color.FromArgb(r, g, b);
         }
 
         private void splitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -496,7 +423,6 @@ namespace RepaintingUtil
                 spotMaps[i].LayerIndex = i;
             }
 
-            
         }
 
         void UpdateICS()
